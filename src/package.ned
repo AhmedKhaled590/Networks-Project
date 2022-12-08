@@ -1,0 +1,3 @@
+package cnproject;
+
+@license(LGPL);
