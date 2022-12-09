@@ -91,11 +91,12 @@ void Node::handleMessage(cMessage *msg)
         final_msg += (char)FLAG_BYTE.to_ulong();
         for (int i = 0; i < message.size(); i++)
         {
-            if (message[i] == (char)FLAG_BYTE.to_ulong() or message[i] == '/') // if the char is flag or ESC
+            if(message[i]==(char)FLAG_BYTE.to_ulong() or message[i]==(char)ESC_BYTE.to_ulong())            // if the char is flag or ESC
             {
                 bits_vector.push_back(ESC_BYTE); // Put escape before the char
                 bits_vector.push_back(message[i]);
-                final_msg += (char)ESC_BYTE.to_ulong() + message[i];
+                final_msg += (char)ESC_BYTE.to_ulong();
+                final_msg += message[i];
             }
             else
             {
