@@ -30,7 +30,7 @@ class Node : public cSimpleModule
 {
 private:
   simtime_t timeout;
-  cMessage *timeoutEvent; 
+  std::vector<cMessage*> timeoutEvents;
   int nextFrameToSend;
   int ackExpected;
   int frameExpected;

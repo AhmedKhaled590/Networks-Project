@@ -51,12 +51,13 @@ void Node::initializeInputVectors()
     {
         codes.push_back((*it).substr(0, 4));
         messages.push_back((*it).substr(5, (*it).length() - 5));
+
+        EV<<"At time 0, node2 , Introducing channel error with code="<<(*it).substr(0, 4)<<endl;
     }
 }
 
 Node::Node()
 {
-    timeoutEvent = NULL;
     nextFrameToSend = 0;
     ackExpected = 0;
     frameExpected = 0;
@@ -65,7 +66,10 @@ Node::Node()
 
 Node::~Node()
 {
-    cancelAndDelete(timeoutEvent);
+    for(int i=0;i<timeoutEvents.size();i++){
+        cancelEvent(timeoutEvents[i]);
+        cancelAndDelete(timeoutEvents[i]);
+    }
 }
 
 void Node::initialize()
@@ -77,9 +81,7 @@ void Node::initialize()
     if (!strcmp(getName(), "node2"))
     {
         // initialize timeout event and schedule it
-        timeoutEvent = new cMessage("timeoutEvent");
         timeout = par("TO").doubleValue();
-        scheduleAt(simTime() + timeout, timeoutEvent);
 
         // initialize input vectors messages and codes
         initializeInputVectors();
@@ -102,16 +104,23 @@ void Node::initialize()
             frame->setPayload(messages.at(i).c_str());
 
             // calculate total delay all channels have processing delay and transmission delay
-            double totalDelay = par("PT").doubleValue() + par("TD").doubleValue();
+            double totalDelay = (par("PT").doubleValue() + par("TD").doubleValue())*(i+1);
 
             // if error code is 0001 then add error delay
             if (!strcmp(codes.at(i).c_str(), "0001"))
             {
                 totalDelay += par("ED").doubleValue();
             }
+
             // nbuffered is the number of frames that are sent but not yet acknowledged
             nbuffered = nbuffered + 1;
 
+            cMessage*timeoutEvent = new cMessage("timeoutEvent");
+            timeoutEvents.push_back(timeoutEvent);
+            scheduleAt(simTime()+timeout+(par("PT").doubleValue()*(i+1)), timeoutEvents[i]);
+
+            EV<<"At time "<<simTime()+par("PT").doubleValue()*(i+1)<<", Node[2] sent frame \
+                    with seq_num="<<frame->getSeqNum()<<" and payload= "<<frame->getPayload()<<" and trailer= […….in bits….. ] , Modified 0 , Lost No, Duplicate 0"<<endl;
             // schedule frame with total delay
             sendDelayed(frame, totalDelay, "out");
         }
@@ -131,8 +140,7 @@ void Node::handleMessage(cMessage *msg)
 
     if (!strcmp(msg->getName(), "timeoutEvent"))
     {
-        EV << "Timeout expired";
-        scheduleAt(simTime() + timeout, timeoutEvent);
+        EV << "Time out event at time "<<simTime()<<", at Node[2] for frame with seq_num= "<<ackExpected%WS<<endl;
 
         if (abs(nextFrameToSend - ackExpected) == 0)
         {
@@ -143,20 +151,30 @@ void Node::handleMessage(cMessage *msg)
         nextFrameToSend = ackExpected;
 
         int nextFrameToSendTemp = nextFrameToSend;
-        for (int i = nextFrameToSendTemp; i < nextFrameToSendTemp + WS && i < messages.size(); i++)
+        nbuffered = 0;
+        int nbufferedTemp = nbuffered;
+        for (int i = nextFrameToSendTemp; i < nextFrameToSendTemp + (WS) && i < messages.size(); i++)
         {
             nextFrameToSend = nextFrameToSend + 1;
+
             MyFrame_Base *frame = new MyFrame_Base("");
             frame->setSeqNum(i % WS);
             frame->setFrameType(0);
             frame->setPayload(messages.at(i).c_str());
 
-            double totalDelay = par("PT").doubleValue() + par("TD").doubleValue();
+            double totalDelay = (par("PT").doubleValue() + par("TD").doubleValue())*(i+1-nextFrameToSendTemp);
 
             if (!strcmp(codes.at(i).c_str(), "0001") && i != nextFrameToSend + 1)
             {
                 totalDelay += par("ED").doubleValue();
             }
+
+            cancelEvent(timeoutEvents[i]);
+            scheduleAt(simTime()+timeout+(par("PT").doubleValue()*(i+1-nextFrameToSendTemp)), timeoutEvents[i]);
+            nbuffered = nbuffered + 1;
+
+            EV<<"At time "<<simTime()+par("PT").doubleValue()*(i+1-nextFrameToSendTemp)<<", Node[2] sent frame";
+            EV<<" with seq_num="<<frame->getSeqNum()<<" and payload= "<<frame->getPayload()<<" and trailer= […….in bits….. ] , Modified 0 , Lost No, Duplicate 0"<<endl;
             sendDelayed(frame, totalDelay, "out");
         }
     }
@@ -173,68 +191,63 @@ void Node::handleMessage(cMessage *msg)
         MyFrame_Base *frame = check_and_cast<MyFrame_Base *>(msg);
         if (frame->getFrameType() == 1 && frame->getAckNackNumber() == ackExpected % (WS))
         {
-            ackExpected = ackExpected + 1;
-            EV << getName();
-            EV << " received frame with Ack Num...   ";
-            EV << frame->getAckNackNumber();
-            EV << "  At time ...  ";
-            EV << simTime();
-            EV << "  and Frame Type ... ";
-            EV << frame->getFrameType();
             nbuffered = nbuffered - 1;
 
-            cancelEvent(timeoutEvent);
-            scheduleAt(simTime() + timeout, timeoutEvent);
+            EV<<"At time "<<simTime()<<", Node[2] received ack \
+                    with seq_num="<<frame->getSeqNum()<<" and payload= "<<frame->getPayload()<<" and trailer= […….in bits….. ] , Modified 0 , Lost No, Duplicate 0"<<endl;
+
+            cancelEvent(timeoutEvents[ackExpected]);
+            ackExpected = ackExpected + 1;
         }
 
         if (nbuffered < (WS))
         {
             if (nextFrameToSend < messages.size())
             {
-                for (int j = nextFrameToSend; j < nextFrameToSend + (WS - nbuffered) && j < messages.size(); j++)
+                int nextFrameToSendTemp = nextFrameToSend;
+                for (int j = nextFrameToSendTemp; j < nextFrameToSendTemp + (WS - nbuffered) && j < messages.size(); j++)
                 {
                     MyFrame_Base *dup_frame = frame->dup();
                     dup_frame->setSeqNum(j % WS);
                     dup_frame->setFrameType(0);
                     dup_frame->setPayload(messages.at(j).c_str());
-                    double totalDelay = par("PT").doubleValue() + par("TD").doubleValue();
+                    double totalDelay = (par("PT").doubleValue() + par("TD").doubleValue())*(j+1-nextFrameToSendTemp);
 
                     if (!strcmp(codes.at(j).c_str(), "0001"))
                     {
                         totalDelay += par("ED").doubleValue();
                     }
-                    EV << "\nScheduling Frame " << j << " To be sent at " << simTime() + totalDelay << endl;
+
+                    cMessage*timeoutEvent = new cMessage("timeoutEvent");
+                    timeoutEvents.push_back(timeoutEvent);
+                    scheduleAt(simTime()+timeout+(par("PT").doubleValue()*(j+1-nextFrameToSendTemp)), timeoutEvents[j]);
+
                     nextFrameToSend = nextFrameToSend + 1;
                     nbuffered = nbuffered + 1;
+
+                    EV<<"At time "<<simTime()+par("PT").doubleValue()*(j+1-nextFrameToSendTemp)<<", Node[2] sent frame \
+                            with seq_num="<<frame->getSeqNum()<<" and payload= "<<frame->getPayload()<<" and trailer= […….in bits….. ] , Modified 0 , Lost No, Duplicate 0"<<endl;
                     sendDelayed(dup_frame, totalDelay, "out");
                 }
             }
         }
+        cancelAndDelete(frame);
     }
+
 
     else if (strcmp(getName(), starternode))
     {
         MyFrame_Base *frame = check_and_cast<MyFrame_Base *>(msg);
         if (frame->getFrameType() == 0 && frame->getSeqNum() == frameExpected % (WS))
         {
-            EV << getName();
-            EV << " received frame " << frameExpected << " with seq num ";
-            EV << frame->getSeqNum();
-            EV << "  At time ...";
-            EV << simTime();
-            EV << "  and payload of ... ";
-            EV << frame->getPayload();
-            EV << "  and Frame Type ... ";
-            EV << frame->getFrameType();
             frameExpected = (frameExpected + 1);
             MyFrame_Base *reply = frame->dup();
             reply->setFrameType(1);
             reply->setAckNackNumber(frame->getSeqNum());
+            EV<<"At time "<<simTime()+par("PT").doubleValue()<<", Node[1] Sending ACK with number "<<frame->getSeqNum()<<endl;
             sendDelayed(reply, par("PT").doubleValue() + par("TD").doubleValue(), "out");
         }
-        else if (frame->getFrameType() == 0)
-        {
-            EV << "\nreceived frame with seq num " << frame->getSeqNum() << " but Discarded\n";
-        }
+
+        cancelAndDelete(frame);
     }
 }
