@@ -51,8 +51,6 @@ void Node::initializeInputVectors()
     {
         codes.push_back((*it).substr(0, 4));
         messages.push_back((*it).substr(5, (*it).length() - 5));
-
-        EV << "At time 0, node2 , Introducing channel error with code=" << (*it).substr(0, 4) << endl;
     }
 }
 
@@ -96,6 +94,8 @@ void Node::initialize()
         // schedule first window of frames
         for (int i = 0; i < WS; i++)
         {
+            EV << "At time [" << simTime() + par("PT").doubleValue() * (i) << "], Node [2] , Introducing channel error with code=[" << codes.at(i) << "]" << endl;
+
             MyFrame_Base *frame = new MyFrame_Base("");
 
             frame->setSeqNum(i);
@@ -104,15 +104,6 @@ void Node::initialize()
             frame->setFrameType(0);
             frame->setPayload(messages.at(i).c_str());
 
-            // calculate total delay all channels have processing delay and transmission delay
-            double totalDelay = (par("PT").doubleValue() * (i + 1) + par("TD").doubleValue());
-
-            // if error code is 0001 then add error delay
-            if (!strcmp(codes.at(i).c_str(), "0001"))
-            {
-                totalDelay += par("ED").doubleValue();
-            }
-
             // nbuffered is the number of frames that are sent but not yet acknowledged
             nbuffered = nbuffered + 1;
 
@@ -120,11 +111,25 @@ void Node::initialize()
             timeoutEvents.push_back(timeoutEvent);
             scheduleAt(simTime() + timeout + (par("PT").doubleValue() * (i + 1)), timeoutEvents[i]);
 
-            EV << "At time " << simTime() + par("PT").doubleValue() * (i + 1) << ", Node[2] sent frame \
-                    with seq_num="
-               << frame->getSeqNum() << " and payload= " << frame->getPayload() << " and trailer= [��.in bits�.. ] , Modified 0 , Lost No, Duplicate 0" << endl;
-            // schedule frame with total delay
-            sendDelayed(frame, totalDelay, "out");
+            EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1) << "], Node[2] sent frame "
+               << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
+               << "] and trailer= [] , Modified [0] , Lost [No], Duplicate [0]" << endl;
+
+            // if error code is 0000 then no error delay
+            if (!strcmp(codes.at(i).c_str(), "0000"))
+            {
+                double totalDelay = (par("PT").doubleValue() * (i + 1) + par("TD").doubleValue());
+                sendDelayed(frame, totalDelay, "out");
+            }
+            // calculate total delay all channels have processing delay and transmission delay
+
+            // if error code is 0001 then add error delay
+            else if (!strcmp(codes.at(i).c_str(), "0001"))
+            {
+                double totalDelay = (par("PT").doubleValue() * (i + 1) + par("TD").doubleValue());
+                totalDelay += par("ED").doubleValue();
+                sendDelayed(frame, totalDelay, "out");
+            }
         }
     }
 }
@@ -156,6 +161,8 @@ void Node::handleMessage(cMessage *msg)
         nbuffered = 0;
         for (int i = nextFrameToSendTemp; i < nextFrameToSendTemp + (WS) && i < messages.size(); i++)
         {
+            EV << "At time [" << simTime() + par("PT").doubleValue() * (i) << "], Node [2] , Introducing channel error with code=[" << codes.at(i) << "]" << endl;
+
             nextFrameToSend = nextFrameToSend + 1;
 
             MyFrame_Base *frame = new MyFrame_Base("");
@@ -174,8 +181,9 @@ void Node::handleMessage(cMessage *msg)
             scheduleAt(simTime() + timeout + (par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp)), timeoutEvents[i]);
             nbuffered = nbuffered + 1;
 
-            EV << "At time " << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << ", Node[2] sent frame";
-            EV << " with seq_num=" << frame->getSeqNum() << " and payload= " << frame->getPayload() << " and trailer= [��.in bits�.. ] , Modified 0 , Lost No, Duplicate 0" << endl;
+            EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
+               << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
+               << "] and trailer= [] , Modified [0] , Lost [No], Duplicate [0]" << endl;
             sendDelayed(frame, totalDelay, "out");
         }
     }
@@ -194,9 +202,9 @@ void Node::handleMessage(cMessage *msg)
         {
             nbuffered = nbuffered - 1;
 
-            EV << "At time " << simTime() << ", Node[2] received ack \
-                    with seq_num="
-               << frame->getSeqNum() << " and payload= " << frame->getPayload() << " and trailer= [��.in bits�.. ] , Modified 0 , Lost No, Duplicate 0" << endl;
+            EV << "At time [" << simTime() << "], Node[2] received ack "
+               << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
+               << "] and trailer= [] , Modified [0] , Lost [No], Duplicate [0]" << endl;
 
             cancelEvent(timeoutEvents[ackExpected]);
             ackExpected = ackExpected + 1;
@@ -209,6 +217,8 @@ void Node::handleMessage(cMessage *msg)
                 int nextFrameToSendTemp = nextFrameToSend;
                 for (int j = nextFrameToSendTemp; j < nextFrameToSendTemp + (WS - nbuffered) && j < messages.size(); j++)
                 {
+                    EV << "At time [" << simTime() + par("PT").doubleValue() * (j - nextFrameToSendTemp) << "], Node [2] , Introducing channel error with code=[" << codes.at(j) << "]" << endl;
+
                     MyFrame_Base *dup_frame = frame->dup();
                     dup_frame->setSeqNum(j % WS);
                     dup_frame->setFrameType(0);
@@ -227,9 +237,10 @@ void Node::handleMessage(cMessage *msg)
                     nextFrameToSend = nextFrameToSend + 1;
                     nbuffered = nbuffered + 1;
 
-                    EV << "At time " << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << ", Node[2] sent frame \
-                            with seq_num="
-                       << frame->getSeqNum() << " and payload= " << frame->getPayload() << " and trailer= [��.in bits�.. ] , Modified 0 , Lost No, Duplicate 0" << endl;
+                    EV << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
+                       << "with seq_num=[" << dup_frame->getSeqNum() << "] and payload= [" << dup_frame->getPayload()
+                       << "] and trailer= [] , Modified [0] , Lost [No], Duplicate [0]" << endl;
+
                     sendDelayed(dup_frame, totalDelay, "out");
                 }
             }
@@ -246,7 +257,7 @@ void Node::handleMessage(cMessage *msg)
             MyFrame_Base *reply = frame->dup();
             reply->setFrameType(1);
             reply->setAckNackNumber(frame->getSeqNum());
-            EV << "At time " << simTime() + par("PT").doubleValue() << ", Node[1] Sending ACK with number " << frame->getSeqNum() << endl;
+            EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[1] Sending ACK with number " << reply->getSeqNum() + 1 << endl;
             sendDelayed(reply, par("PT").doubleValue() + par("TD").doubleValue(), "out");
         }
 
