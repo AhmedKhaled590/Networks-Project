@@ -38,6 +38,7 @@ private:
   std::vector<std::string> messages;
   std::vector<std::string> codes;
   int WS;
+  
 
 public:
   Node();
