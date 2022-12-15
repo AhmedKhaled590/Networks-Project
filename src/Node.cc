@@ -313,14 +313,14 @@ void Node::handleMessage(cMessage *msg)
                 {
                     EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                    << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                   << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [0], Delay [0]" << endl;
+                   << "] and trailer= ["<<frame->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [0], Delay [0]" << endl;
                 }
                 else
                 {
                     sendDelayed(frame, totalDelay, "out");
                     EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                     << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                    << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]" << endl;
+                    << "] and trailer= ["<<frame->getParity()<<"] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]" << endl;
                 }
             }
             else if(!strcmp(codes.at(i).c_str(), "0101"))
@@ -331,7 +331,7 @@ void Node::handleMessage(cMessage *msg)
                     totalDelay += par("ED").doubleValue();
                     EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                     << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                    << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [0], Delay ["
+                    << "] and trailer= ["<<frame->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [0], Delay ["
                    << par("ED").doubleValue() << "]" << endl;
                 }
                 else
@@ -339,56 +339,56 @@ void Node::handleMessage(cMessage *msg)
                     sendDelayed(frame, totalDelay, "out");
                     EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                     << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                    << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]" << endl;
+                    << "] and trailer= ["<<frame->getParity()<<"] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]" << endl;
                 }
             }
-            else if(!strcmp(codes.at(j).c_str(), "0110"))
+            else if(!strcmp(codes.at(i).c_str(), "0110"))
             {
-                double totalDelay = (par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
+                double totalDelay = (par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
                 if (i != nextFrameToSendTemp + 1)
                 {
-                    EV  << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
+                    EV  << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                         << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                        << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [No], Duplicate [1], Delay [0]" << endl;
+                        << "] and trailer= ["<<frame->getParity()<<"] , Modified [-1] , Lost [No], Duplicate [1], Delay [0]" << endl;
                     MyFrame_Base *dup_frame2 = frame->dup();
                     totalDelay += par("DD").doubleValue();
 
-                    EV << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
-                        << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                        << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [2], Delay [0]" << endl;
+                    EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
+                        << "with seq_num=[" << dup_frame2->getSeqNum() << "] and payload= [" << dup_frame2->getPayload()
+                        << "] and trailer= ["<<dup_frame2->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [2], Delay [0]" << endl;
                 }
                 else
                 {
                     sendDelayed(frame, totalDelay, "out");
-                    EV  << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
+                    EV  << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                         << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                        << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]" << endl;
+                        << "] and trailer= ["<<frame->getParity()<<"] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]" << endl;
                 }
             }
-            else if(!strcmp(codes.at(j).c_str(), "0111"))
+            else if(!strcmp(codes.at(i).c_str(), "0111"))
             {
-                double totalDelay = (par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
+                double totalDelay = (par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
                 if (i != nextFrameToSendTemp + 1)
                 {
                     totalDelay += par("ED").doubleValue();
-                    EV  << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
+                    EV  << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                         << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                        << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [1], Delay ["
+                        << "] and trailer= ["<<frame->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [1], Delay ["
                         << par("ED").doubleValue() << "]" << endl;
                     MyFrame_Base *dup_frame2 = frame->dup();
                     totalDelay += par("DD").doubleValue();
 
-                    EV << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
-                        << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                        << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [2], Delay ["
+                    EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
+                        << "with seq_num=[" << dup_frame2->getSeqNum() << "] and payload= [" << dup_frame2->getPayload()
+                        << "] and trailer= ["<<dup_frame2->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [2], Delay ["
                         << par("ED").doubleValue() << "]" << endl;
                 }
                 else
                 {
                     sendDelayed(frame, totalDelay, "out");
-                    EV  << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
+                    EV  << "At time [" << simTime() + par("PT").doubleValue() * (i + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                         << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                        << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]" << endl;
+                        << "] and trailer= ["<<frame->getParity()<<"] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]" << endl;
                 } 
             }
         }
@@ -429,7 +429,7 @@ void Node::handleMessage(cMessage *msg)
                     dup_frame->setSeqNum(j % WS);
                     dup_frame->setFrameType(0);
                     dup_frame->setPayload(messages.at(j).c_str());
-                    std::string payload = getFramedMessage(messages.at(i));
+                    std::string payload = getFramedMessage(messages.at(j));
                     dup_frame->setParity(getParityByte(getBitsVector(payload)));
                     dup_frame->setPayload(payload.c_str());
 
@@ -505,7 +505,7 @@ void Node::handleMessage(cMessage *msg)
 
                         EV << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                            << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                           << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [0], Delay [0]" << endl;
+                           << "] and trailer= ["<<dup_frame->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [0], Delay [0]" << endl;
                     }
                     else if(!strcmp(codes.at(j).c_str(), "0101"))
                     {
@@ -517,7 +517,7 @@ void Node::handleMessage(cMessage *msg)
                         
                         EV << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                            << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                           << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [0], Delay ["
+                           << "] and trailer= ["<<dup_frame->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [0], Delay ["
                            << par("ED").doubleValue() << "]" << endl;
                     }
                     else if(!strcmp(codes.at(j).c_str(), "0110"))
@@ -526,14 +526,14 @@ void Node::handleMessage(cMessage *msg)
                         // sendDelayed(dup_frame, totalDelay, "out");
                         EV << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                            << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                           << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [1], Delay [0]" << endl;
+                           << "] and trailer= ["<<dup_frame->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [1], Delay [0]" << endl;
                         
                         MyFrame_Base *dup_frame2 = frame->dup();
                         totalDelay += par("DD").doubleValue();
 
                         EV << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                            << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                           << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [2], Delay [0]" << endl;
+                           << "] and trailer= ["<<dup_frame2->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [2], Delay [0]" << endl;
 
                     }
                     else if(!strcmp(codes.at(j).c_str(), "0111"))
@@ -542,14 +542,14 @@ void Node::handleMessage(cMessage *msg)
                         totalDelay += par("ED").doubleValue();
                         EV << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                            << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                           << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [1], Delay ["
+                           << "] and trailer= ["<<dup_frame->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [1], Delay ["
                            << par("ED").doubleValue() << "]" << endl;
 
                         MyFrame_Base *dup_frame2 = frame->dup();
                         totalDelay += par("DD").doubleValue();
                         EV << "At time [" << simTime() + par("PT").doubleValue() * (j + 1 - nextFrameToSendTemp) << "], Node[2] sent frame "
                            << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                           << "] and trailer= ["<<dup_frame.getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [2], Delay ["
+                           << "] and trailer= ["<<dup_frame2->getParity()<<"] , Modified [-1] , Lost [Yes], Duplicate [2], Delay ["
                            << par("ED").doubleValue() << "]" << endl;
                         
                     }
