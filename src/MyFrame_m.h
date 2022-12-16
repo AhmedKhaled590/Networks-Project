@@ -81,6 +81,7 @@ protected:
 
 public:
   MyFrame_Base(const char *name = nullptr, short kind = 0);
+
   virtual ~MyFrame_Base();
   virtual MyFrame_Base *dup() const override { return new MyFrame_Base(*this); }
   virtual void parsimPack(omnetpp::cCommBuffer *b) const override;
