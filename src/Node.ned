@@ -29,6 +29,6 @@ simple Node
         double DD;
 		double LP;        
     gates:
-        input in;
+        input in[2];
         output out;
 }
