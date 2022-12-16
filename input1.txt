@@ -1,5 +1,9 @@
 0000 aaaa
 0001 b$bbb
-0000 ccc$$c
-0000 d/$ddd
+0011 ccc$$c
+0010 d/$ddd
 0000 $eeee$
+0011 ewdaf
+0001 dweds
+0000 fvdve
+0010 dwfeqa
