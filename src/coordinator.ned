@@ -13,21 +13,13 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-//
-// TODO generated message class
-//
-cplusplus {{
-    #include <bitset>
-    typedef std::bitset<8> bits;
-}}
-class noncobject bits;
+package cnproject;
 
-
-packet MyFrame {
-    @customize(true);  // see the generated C++ header for more info
-    int seqNum;
-    string payload;
-    int frameType; //0:Data, 1: ACK, 2:NACK
-    int ackNackNumber;
-    bits parity;
+//
+// TODO auto-generated module
+//
+simple Coordinator
+{
+    gates:
+        output node[2];
 }

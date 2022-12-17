@@ -17,6 +17,15 @@
 
 Define_Module(Node);
 
+std::string modifyBit(std::string message, int bit_to_modify)
+{
+    int n = message.size() * 8;
+    std::bitset<n> messageBits(message);
+    messageBits.flip(bit_to_modify);
+    std::string modified_message = messageBits.to_string();
+    return modified_message;
+}
+
 void Node::initialize()
 {
     FLAG_BYTE = '$';
@@ -110,6 +119,9 @@ void Node::handleMessage(cMessage *msg)
         {
             parity_byte ^= bits_vector[i];
         }
+        std::cout<<"Before modifying"<<final_msg<<endl;
+        modifyBit(final_msg, 3);
+        std::cout<<"After modifying"<<final_msg<<endl;
         bits_vector.push_back(parity_byte); // Put the parity byte
         final_msg += (char)parity_byte.to_ulong();
         bits_vector.push_back(1); // Put the frame type (1 for data)
@@ -121,6 +133,7 @@ void Node::handleMessage(cMessage *msg)
         ss << 3;
         final_msg += ss.str();
         msg->setName(final_msg.c_str());
+
         send(msg, "out");
     }
 }

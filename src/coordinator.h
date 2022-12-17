@@ -13,21 +13,21 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-//
-// TODO generated message class
-//
-cplusplus {{
-    #include <bitset>
-    typedef std::bitset<8> bits;
-}}
-class noncobject bits;
+#ifndef __CNPROJECT_COORDINATOR_H_
+#define __CNPROJECT_COORDINATOR_H_
 
+#include <omnetpp.h>
 
-packet MyFrame {
-    @customize(true);  // see the generated C++ header for more info
-    int seqNum;
-    string payload;
-    int frameType; //0:Data, 1: ACK, 2:NACK
-    int ackNackNumber;
-    bits parity;
-}
+using namespace omnetpp;
+
+/**
+ * TODO - Generated class
+ */
+class Coordinator : public cSimpleModule
+{
+  protected:
+    virtual void initialize();
+    virtual void handleMessage(cMessage *msg);
+};
+
+#endif
