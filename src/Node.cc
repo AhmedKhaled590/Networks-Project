@@ -79,6 +79,19 @@ std::bitset<8> getParityByte(std::vector<std::bitset<8>> bits_vector)
     }
     return parity_byte;
 }
+
+std::bitset<8> checkMessage(std::vector<std::bitset<8>> bits_vector, std::bitset<8> parity_byte)
+{
+    std::bitset<8> parity_byte_check;
+    for (int i = 0; i < bits_vector.size(); ++i)
+    {
+        parity_byte_check ^= bits_vector[i];
+    }
+    parity_byte_check ^= parity_byte;
+    return parity_byte_check;
+}
+
+
 std::string modifyBit(std::vector<std::bitset<8>> bits_vector, int bit_to_modify)
 {
     int bucket = bit_to_modify / 8;
@@ -92,6 +105,7 @@ std::string modifyBit(std::vector<std::bitset<8>> bits_vector, int bit_to_modify
     return modified_message;
 }
 
+
 void Node::messageHandler(MyFrame_Base *message, bool modify, bool lost, bool duplicate, bool delay, int modifyIndex, int& index, int& nextFrameToSendTemp)
 {
     // some vars for printing
@@ -102,13 +116,13 @@ void Node::messageHandler(MyFrame_Base *message, bool modify, bool lost, bool du
         double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
         sendDelayed(message, totalDelay, "out");
     }
-    else if(delay)
+    else if(delay && !duplicate && !lost && !modify)
     {
         double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
         totalDelay += par("ED").doubleValue();
         sendDelayed(message, totalDelay, "out");
     }
-    else if(duplicate)
+    else if(duplicate && !delay && !lost && !modify)
     {
         duplicateInt = 1;
         double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
@@ -117,7 +131,7 @@ void Node::messageHandler(MyFrame_Base *message, bool modify, bool lost, bool du
         totalDelay += par("DD").doubleValue();
         sendDelayed(dup_frame, totalDelay, "out");
     }
-    else if(delay && duplicate)
+    else if(delay && duplicate && !lost && !modify)
     {
         duplicateInt = 1;
         double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
@@ -127,7 +141,7 @@ void Node::messageHandler(MyFrame_Base *message, bool modify, bool lost, bool du
         totalDelay += par("DD").doubleValue();
         sendDelayed(dup_frame, totalDelay, "out");
     }
-    else if(lost)
+    else if(lost && !duplicate && !delay && !modify)
     {
         lostString = "Yes";
         double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
@@ -136,26 +150,26 @@ void Node::messageHandler(MyFrame_Base *message, bool modify, bool lost, bool du
     {
         lostString = "Yes";
     }
-    else if(lost && duplicate)
+    else if(lost && duplicate && !delay && !modify)
     {
         lostString = "Yes";
         duplicateInt = 1;
         MyFrame_Base *dup_frame = message->dup();
     }
-    else if(lost && duplicate && delay)
+    else if(lost && duplicate && delay && !modify)
     {
         lostString = "Yes";
         duplicateInt = 1;
         MyFrame_Base *dup_frame = message->dup();
     }
-    else if(modify)
+    else if(modify && !duplicate && !lost && !delay)
     {
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
         double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
         sendDelayed(message, totalDelay, "out");
     }
-    else if(modify && delay)
+    else if(modify && delay && !duplicate && !lost)
     {
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
@@ -163,7 +177,7 @@ void Node::messageHandler(MyFrame_Base *message, bool modify, bool lost, bool du
         totalDelay += par("ED").doubleValue();
         sendDelayed(message, totalDelay, "out");
     }
-    else if(modify && duplicate)
+    else if(modify && duplicate && !lost && !modify)
     {
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
@@ -173,7 +187,7 @@ void Node::messageHandler(MyFrame_Base *message, bool modify, bool lost, bool du
         totalDelay += par("DD").doubleValue();
         sendDelayed(dup_frame, totalDelay, "out");
     }
-    else if(modify && duplicate && delay)
+    else if(modify && duplicate && delay && !lost)
     {
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
@@ -285,56 +299,77 @@ void Node::initialize()
             scheduleAt(simTime() + timeout + (par("PT").doubleValue() * (i + 1)), timeoutEvents[i]);
 
             // if error code is 0000 then no error delay
+            int randBit = int(uniform(0, payload.size()*8));
+            int next =0;
+            // if error code is 0000 then no error delay
             if (!strcmp(codes.at(i).c_str(), "0000"))
             {
-                double totalDelay = (par("PT").doubleValue() * (i + 1) + par("TD").doubleValue());
-                sendDelayed(frame, totalDelay, "out");
-
-                EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1) << "], Node[2] sent frame "
-                   << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                   << "] and trailer= [] , Modified [0] , Lost [No], Duplicate [0], Delay [0]" << endl;
+                messageHandler(frame, 0, 0, 0, 0, -1, i, next);
             }
             // calculate total delay all channels have processing delay and transmission delay
 
             // if error code is 0001 then add error delay
             else if (!strcmp(codes.at(i).c_str(), "0001"))
             {
-                double totalDelay = (par("PT").doubleValue() * (i + 1) + par("TD").doubleValue()) + par("ED").doubleValue();
-                sendDelayed(frame, totalDelay, "out");
-
-                EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1) << "], Node[2] sent frame "
-                   << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                   << "] and trailer= [] , Modified [0] , Lost [No], Duplicate [0], Delay ["
-                   << par("ED").doubleValue() << "]" << endl;
+                messageHandler(frame, 0, 0, 0, 1, -1, i, next);
             }
 
             else if (!strcmp(codes.at(i).c_str(), "0010"))
             {
-                double totalDelay = (par("PT").doubleValue() * (i + 1) + par("TD").doubleValue());
-                sendDelayed(frame, totalDelay, "out");
-
-                MyFrame_Base *dup_frame = frame->dup();
-                totalDelay += par("DD").doubleValue();
-                sendDelayed(dup_frame, totalDelay, "out");
-
-                EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1) << "], Node[2] sent frame "
-                   << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                   << "] and trailer= [] , Modified [0] , Lost [No], Duplicate [1], Delay [0]" << endl;
+                messageHandler(frame, 0, 0, 1, 0, -1, i, next);
             }
 
             else if (!strcmp(codes.at(i).c_str(), "0011"))
             {
-                double totalDelay = (par("PT").doubleValue() * (i + 1) + par("TD").doubleValue()) + par("ED").doubleValue();
-                sendDelayed(frame, totalDelay, "out");
-
-                MyFrame_Base *dup_frame = frame->dup();
-                totalDelay += par("DD").doubleValue();
-                sendDelayed(dup_frame, totalDelay, "out");
-
-                EV << "At time [" << simTime() + par("PT").doubleValue() * (i + 1) << "], Node[2] sent frame "
-                   << "with seq_num=[" << frame->getSeqNum() << "] and payload= [" << frame->getPayload()
-                   << "] and trailer= [] , Modified [0] , Lost [No], Duplicate [1], Delay ["
-                   << par("ED").doubleValue() << "]" << endl;
+                messageHandler(frame, 0, 0, 1, 1, -1, i, next);
+            }
+            else if (!strcmp(codes.at(i).c_str(), "0100"))
+            {
+                messageHandler(frame, 0, 1, 0, 0, randBit, i, next);
+            }
+            else if (!strcmp(codes.at(i).c_str(), "0101"))
+            {
+                messageHandler(frame, 0, 1, 0, 1, randBit, i, next);
+            }
+            else if (!strcmp(codes.at(i).c_str(), "0110"))
+            {
+                messageHandler(frame, 0, 1, 1, 0, randBit, i, next);
+            }
+            else if (!strcmp(codes.at(i).c_str(), "0111"))
+            {
+                messageHandler(frame, 0, 1, 1, 1, randBit, i, next);
+            }
+            else if(!strcmp(codes.at(i).c_str(), "1000"))
+            {
+                messageHandler(frame, 1, 0, 0, 0, randBit, i, next);
+            }
+            else if(!strcmp(codes.at(i).c_str(), "1001"))
+            {
+                messageHandler(frame, 1, 0, 0, 1, randBit, i, next);
+            }
+            else if(!strcmp(codes.at(i).c_str(), "1010"))
+            {
+                messageHandler(frame, 1, 0, 1, 0, randBit, i, next);
+            }
+            else if(!strcmp(codes.at(i).c_str(), "1011"))
+            {
+                messageHandler(frame, 1, 0, 1, 1, randBit, i, next);
+            }
+            else if(!strcmp(codes.at(i).c_str(), "1100"))
+            {
+                messageHandler(frame, 1, 1, 0, 0, randBit, i, next);
+            }
+            else if(!strcmp(codes.at(i).c_str(), "1101"))
+            {
+                messageHandler(frame, 1, 1, 0, 1, randBit, i, next);
+            }
+            else if(!strcmp(codes.at(i).c_str(), "1110"))
+            {
+                messageHandler(frame, 1, 1, 1, 0, randBit, i, next);
+            }
+            else if(!strcmp(codes.at(i).c_str(), "1111"))
+            {
+                messageHandler(frame, 1, 1, 1, 1, randBit, i, next);
             }
         }
     }
@@ -382,7 +417,7 @@ void Node::handleMessage(cMessage *msg)
             }
             else
             {
-                int randBit = int(uniform(0, payload.size()));
+                int randBit = int(uniform(0, payload.size()*8));
                 // if error code is 0000 then no error delay
                 if (!strcmp(codes.at(i).c_str(), "0000"))
                 {
@@ -501,7 +536,7 @@ void Node::handleMessage(cMessage *msg)
 
                     nextFrameToSend = nextFrameToSend + 1;
                     nbuffered = nbuffered + 1;
-                    int randBit = int(uniform(0, payload.size()));
+                    int randBit = int(uniform(0, payload.size()*8));
                     // if error code is 0000 then no error delay
                     if (!strcmp(codes.at(j).c_str(), "0000"))
                     {
@@ -585,34 +620,38 @@ void Node::handleMessage(cMessage *msg)
             frameExpected = (frameExpected + 1);
             MyFrame_Base *reply = frame->dup();
             std::string recPayload = reply->getPayload();
-            std::string recParity = reply->getParity().to_string();
-            recPayload += recParity;
-            std::bitset<8> recBits = getParityByte(getBitsVector(recPayload));
-            recParity = recBits.to_string();
+            std::cout<<"recPayload1: "<<recPayload<<endl;
+            std::bitset<8> recParity = reply->getParity();
+            std::cout<<"recParity: "<<recParity<<endl;
+            std::bitset<8> recBits = checkMessage(getBitsVector(recPayload),recParity);
+            std::string ParityStr = recBits.to_string();
+
+            std::cout<<"recBits: "<<recBits<<endl;
+            
             reply->setAckNackNumber(frame->getSeqNum());
             int LossProbability = int(uniform(0, 100));
-            int LP = par("LP").intValue();
-            if(!(strcmp(recParity.c_str(), "00000000")) && LossProbability > LP)
+            int LP = (int)par("LP").doubleValue();
+            if(!(strcmp(ParityStr.c_str(), "00000000")) && LossProbability > LP)
             {
                 reply->setFrameType(1);
-                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[1] Sending ACK with number " << reply->getSeqNum() <<"loss [No]"  << endl;
+                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[1] Sending ACK with number " << reply->getSeqNum() <<" loss [No]"  << endl;
                 sendDelayed(reply, par("PT").doubleValue() + par("TD").doubleValue(), "out");
             }
-            else if(strcmp(recParity.c_str(), "00000000") && LossProbability > LP)
+            else if(strcmp(ParityStr.c_str(), "00000000") && LossProbability > LP)
             {
                 reply->setFrameType(2);
-                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[1] Sending NACK with number " << reply->getSeqNum() <<"loss [No]" << endl;
+                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[1] Sending NACK with number " << reply->getSeqNum() <<" loss [No]" << endl;
                 sendDelayed(reply, par("PT").doubleValue() + par("TD").doubleValue(), "out");
             }
-            else if(!(strcmp(recParity.c_str(), "00000000")) && LossProbability < LP)
+            else if(!(strcmp(ParityStr.c_str(), "00000000")) && LossProbability < LP)
             {
                 reply->setFrameType(1);
-                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[1] Sending ACK with number " << reply->getSeqNum() <<"loss [Yes]" << endl;
+                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[1] Sending ACK with number " << reply->getSeqNum() <<" loss [Yes]" << endl;
             }
-            else if(strcmp(recParity.c_str(), "00000000") && LossProbability < LP)
+            else if(strcmp(ParityStr.c_str(), "00000000") && LossProbability < LP)
             {
                 reply->setFrameType(2);
-                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[1] Sending NACK with number " << reply->getSeqNum() <<"loss [Yes]" << endl;
+                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[1] Sending NACK with number " << reply->getSeqNum() <<" loss [Yes]" << endl;
             }
             
         }
