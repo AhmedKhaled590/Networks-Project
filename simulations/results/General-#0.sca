@@ -1,0 +1,46 @@
+version 3
+run General-0-20221218-00:51:34-23528
+attr configname General
+attr datetime 20221218-00:51:34
+attr datetimef 20221218-005134
+attr experiment General
+attr inifile omnetpp.ini
+attr iterationvars ""
+attr iterationvarsd ""
+attr iterationvarsf ""
+attr measurement ""
+attr network cnproject.Network
+attr processid 23528
+attr repetition 0
+attr replication #0
+attr resultdir results
+attr runnumber 0
+attr seedset 0
+config network cnproject.Network
+config **.TO 10.0
+config **.WS 4
+config **.PT 0.5
+config **.LP -1.0
+config **.DD 0.1
+config **.ED 4.0
+config **.TD 1.0
+
+par Network.node1 typename "\"cnproject.Node\""
+par Network.node1 WS 4
+par Network.node1 TO 10
+par Network.node1 PT 0.5
+par Network.node1 TD 1
+par Network.node1 ED 4
+par Network.node1 DD 0.1
+par Network.node1 LP -1
+par Network.node2 typename "\"cnproject.Node\""
+par Network.node2 WS 4
+par Network.node2 TO 10
+par Network.node2 PT 0.5
+par Network.node2 TD 1
+par Network.node2 ED 4
+par Network.node2 DD 0.1
+par Network.node2 LP -1
+par Network.coordinator typename "\"cnproject.Coordinator\""
+par Network typename "\"cnproject.Network\""
+

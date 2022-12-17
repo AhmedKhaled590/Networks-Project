@@ -1,6 +1,6 @@
 ../out/clang-debug/src/coordinator.o: coordinator.cc coordinator.h \
-  C:/omnetpp-5.6.2/include\omnetpp.h
+  D:/omnetpp-6.0.1/include/omnetpp.h
 
 coordinator.h:
 
-C:/omnetpp-5.6.2/include\omnetpp.h:
+D:/omnetpp-6.0.1/include/omnetpp.h:

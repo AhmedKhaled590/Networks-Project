@@ -38,12 +38,11 @@ private:
   std::vector<std::string> messages;
   std::vector<std::string> codes;
   int WS;
-  
 
 public:
   Node();
   virtual ~Node();
-  void messageHandler(MyFrame_Base *message, bool modify, bool lost, bool duplicate, bool delay, int modifyIndex, int& index, int& nextFrameToSendTemp);
+  void messageHandler(MyFrame_Base *message, const char *code, int modifyIndex, int &index, int &nextFrameToSendTemp);
 
 protected:
   virtual void initialize() override;
