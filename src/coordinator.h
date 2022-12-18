@@ -17,6 +17,8 @@
 #define __CNPROJECT_COORDINATOR_H_
 
 #include <omnetpp.h>
+#include <vector>
+#include <string>
 
 using namespace omnetpp;
 
@@ -25,9 +27,13 @@ using namespace omnetpp;
  */
 class Coordinator : public cSimpleModule
 {
+  private:
+    std::string node;
+    std::string startTime;
   protected:
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
+    void readInputFile(const char *filename);
 };
 
 #endif
