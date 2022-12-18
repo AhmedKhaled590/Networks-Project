@@ -14,15 +14,52 @@
 // 
 
 #include "coordinator.h"
+#include <iostream>
+#include <fstream>
 
 Define_Module(Coordinator);
+
+void Coordinator::readInputFile(const char *filename)
+{
+    std::ifstream filestream;
+    std::string line;
+    std::vector<std::string> lines;
+
+    filestream.open(filename, std::ifstream::in);
+
+    if (!filestream)
+    {
+        throw cRuntimeError("Error opening file '%s'?", filename);
+    }
+    else
+    {
+        while (getline(filestream, line))
+        {
+            node = line.substr(0, line.find(" "));
+            startTime = line.substr(line.find(" ") + 1, line.length());
+        }
+    }
+    filestream.close();
+}
+
 
 void Coordinator::initialize()
 {
     // TODO - Generated method body
+    readInputFile("F:/CN/Project/Networks-Project/coordinator.txt");
+    scheduleAt(simTime() + stoi(startTime), new cMessage(""));
 }
 
 void Coordinator::handleMessage(cMessage *msg)
 {
     // TODO - Generated method body
+    if(msg->isSelfMessage())
+    {
+        msg->setName(node.c_str());
+        send(msg, "node", stoi(node));
+    }
+    else
+    {
+        delete msg;
+    }
 }
