@@ -38,6 +38,8 @@ private:
   std::vector<std::string> messages;
   std::vector<std::string> codes;
   int WS;
+  std::string starternode;
+  int starttime;
 
 public:
   Node();
@@ -47,7 +49,7 @@ public:
 protected:
   virtual void initialize() override;
   virtual void handleMessage(cMessage *msg) override;
-  void initializeInputVectors();
+  void initializeInputVectors(std::string inputfile);
 };
 
 #endif

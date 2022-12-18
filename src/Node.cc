@@ -17,6 +17,8 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <windows.h>
+
 Define_Module(Node);
 
 std::vector<std::string> readInputFile(const char *filename)
@@ -239,9 +241,14 @@ void Node::messageHandler(MyFrame_Base *message, const char *code, int modifyInd
     }
 }
 
-void Node::initializeInputVectors()
+void Node::initializeInputVectors(std::string inputfile)
 {
-    std::vector<std::string> lines = readInputFile("D:/omnetpp-6.0.1/samples/CNProject/input1.txt");
+    // get full path of input file from getFullPath() and read it
+    char path[200];
+
+    GetFullPathName(inputfile.c_str(), 200, path, NULL);
+
+    std::vector<std::string> lines = readInputFile(path);
     for (std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); ++it)
     {
         codes.push_back((*it).substr(0, 4));
@@ -271,14 +278,25 @@ void Node::initialize()
 
     // TODO - Generated method body
     WS = par("WS").intValue();
+    starternode = "";
+    starttime = -1;
+    // initialize timeout event and schedule it
+    timeout = par("TO").doubleValue();
+}
 
-    if (!strcmp(getName(), "node2"))
+void Node::handleMessage(cMessage *msg)
+{
+    // TODO - Generated method body
+    // TODO:receive msg from coordinator to decide which node will begin
+
+    // starternode is the sender node (will be handled later after implementing coordinator)
+
+    if (!strcmp(msg->getName(), "start"))
     {
-        // initialize timeout event and schedule it
-        timeout = par("TO").doubleValue();
-
+        EV << "Start From " << getName() << endl;
         // initialize input vectors messages and codes
-        initializeInputVectors();
+        std::string inputfile = (strcmp(getName(), "node0")) == 0 ? "input0.txt" : "input1.txt";
+        initializeInputVectors(inputfile);
 
         // check if window size is greater than the number of messages
         if (WS > messages.size())
@@ -315,20 +333,24 @@ void Node::initialize()
             messageHandler(frame, codes.at(i).c_str(), randBit, i, next);
         }
     }
-}
 
-void Node::handleMessage(cMessage *msg)
-{
-    // TODO - Generated method body
-    // TODO:receive msg from coordinator to decide which node will begin
+    // check if message type is cMessage not MyFrame_Base
+    else if (typeid(*msg) != typeid(MyFrame_Base) && strcmp(msg->getName(), "timeoutEvent"))
+    {
+        EV << "received from coordinator" << endl;
+        std::string tempMsg(msg->getName());
+        starternode = tempMsg.substr(0, tempMsg.find(" "));
+        starttime = stoi(tempMsg.substr(tempMsg.find(" ") + 1, tempMsg.length()));
+        EV << starternode << "   " << starttime << endl;
 
-    // starternode is the sender node (will be handled later after implementing coordinator)
-    const char *starternode = "node2";
+        if (!strcmp(starternode.c_str(), getName()))
+        {
+            cMessage *initMsg = new cMessage("start");
+            scheduleAt(simTime() + starttime, initMsg);
+        }
+    }
 
-    // if timeout event is received
-    // schedule next window of frames
-
-    if (!strcmp(msg->getName(), "timeoutEvent"))
+    else if (!strcmp(msg->getName(), "timeoutEvent"))
     {
         EV << "Time out event at time " << simTime() << ", at Node[2] for frame with seq_num= " << ackExpected % WS << endl;
 
@@ -372,7 +394,7 @@ void Node::handleMessage(cMessage *msg)
     // if ack is received increment ackExpected and decrement nbuffered
     // and cancel timeout event and schedule it again from current time
 
-    else if (!strcmp(getName(), starternode))
+    else if (!strcmp(getName(), starternode.c_str()))
     {
         MyFrame_Base *frame = check_and_cast<MyFrame_Base *>(msg);
         if (frame->getFrameType() == 1 && frame->getAckNackNumber() == (ackExpected + 1) % (WS))
@@ -418,7 +440,7 @@ void Node::handleMessage(cMessage *msg)
         cancelAndDelete(frame);
     }
 
-    else if (strcmp(getName(), starternode))
+    else if (strcmp(getName(), starternode.c_str()))
     {
         MyFrame_Base *frame = check_and_cast<MyFrame_Base *>(msg);
 

@@ -16,6 +16,7 @@
 #include "coordinator.h"
 #include <iostream>
 #include <fstream>
+#include <string>
 
 Define_Module(Coordinator);
 
@@ -46,8 +47,11 @@ void Coordinator::readInputFile(const char *filename)
 void Coordinator::initialize()
 {
     // TODO - Generated method body
-    readInputFile("F:/CN/Project/Networks-Project/coordinator.txt");
-    scheduleAt(simTime() + stoi(startTime), new cMessage(""));
+    char path[200];
+    GetFullPathName("coordinator.txt", 200, path, NULL);
+
+    readInputFile(path);
+    scheduleAt(simTime()+ 0, new cMessage(""));
 }
 
 void Coordinator::handleMessage(cMessage *msg)
@@ -55,8 +59,11 @@ void Coordinator::handleMessage(cMessage *msg)
     // TODO - Generated method body
     if(msg->isSelfMessage())
     {
-        msg->setName(node.c_str());
-        send(msg, "node", stoi(node));
+        std::string message = node + " "+ startTime;
+        msg->setName(message.c_str());
+        send(msg, "node", 0);
+        cMessage*duplicate = msg->dup();
+        send(duplicate, "node", 1);
     }
     else
     {
