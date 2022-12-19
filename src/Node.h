@@ -39,6 +39,7 @@ private:
   std::vector<std::string> codes;
   int WS;
   std::string starternode;
+  int starternodeid;
   int starttime;
 
 public:
