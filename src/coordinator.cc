@@ -62,7 +62,7 @@ void Coordinator::handleMessage(cMessage *msg)
         std::string message = node + " "+ startTime;
         msg->setName(message.c_str());
         send(msg, "node", 0);
-        cMessage*duplicate = msg->dup();
+        cMessage* duplicate = msg->dup();
         send(duplicate, "node", 1);
     }
     else
