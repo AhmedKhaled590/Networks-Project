@@ -32,6 +32,7 @@ git clone https://github.com/gaserashraf/Eagle-Hunting-Game.git
    <hr>
 </div>
 
+## 📷 Demo
 ### ✨ Contributors
 <table>
   <tr>
