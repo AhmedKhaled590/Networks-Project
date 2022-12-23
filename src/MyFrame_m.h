@@ -23,7 +23,7 @@ typedef std::bitset<8> bits;
 // }}
 
 /**
- * Class generated from <tt>MyFrame.msg:27</tt> by opp_msgtool.
+ * Class generated from <tt>MyFrame.msg:26</tt> by opp_msgtool.
  * <pre>
  * packet MyFrame
  * {
