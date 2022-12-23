@@ -525,16 +525,14 @@ void Node::handleMessage(cMessage *msg)
         {
             MyFrame_Base *reply = frame->dup();
             std::string recPayload = reply->getPayload();
-            std::cout << "recPayload1: " << recPayload << endl;
             std::bitset<8> recParity = reply->getParity();
-            std::cout << "recParity: " << recParity << endl;
             std::bitset<8> recBits = checkMessage(getBitsVector(recPayload), recParity);
             std::string ParityStr = recBits.to_string();
 
-            std::cout << "recBits: " << recBits << endl;
-
             int LossProbability = int(uniform(0, 100));
             int LP = (int)par("LP").doubleValue();
+            std::cout<<"LossProbability: "<<LossProbability<<endl;
+            std::cout<<"LP: "<<LP<<endl;
             if (!(strcmp(ParityStr.c_str(), "00000000")) && LossProbability > LP)
             {
                 frameExpected = frameExpected + 1;
@@ -554,11 +552,11 @@ void Node::handleMessage(cMessage *msg)
             }
             else if (!(strcmp(ParityStr.c_str(), "00000000")) && LossProbability < LP)
             {
-                frameExpected = frameExpected + 1;
-                reply->setAckNackNumber(frameExpected % WS);
+                int temp = frameExpected;
+                temp = temp + 1;
                 reply->setFrameType(1);
-                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << reply->getAckNackNumber() << "] ,loss [yes]" << endl;
-                MyFile << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [[" << reply->getAckNackNumber() << "] ,loss [yes]" << endl;
+                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << (temp%WS) << "] ,loss [yes]" << endl;
+                MyFile << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << (temp%WS) << "] ,loss [yes]" << endl;
             }
             else if (strcmp(ParityStr.c_str(), "00000000") && LossProbability < LP)
             {
