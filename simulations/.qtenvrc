@@ -6,6 +6,6 @@ run-min-animation-speed=nan
 run-max-animation-speed=nan
 fast-playback-speed=1000
 fast-min-playback-speed=1
-fast-max-playback-speed=1e+6
+fast-max-playback-speed=1e+06
 fast-min-animation-speed=nan
 fast-max-animation-speed=nan
