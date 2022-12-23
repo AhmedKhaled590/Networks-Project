@@ -21,7 +21,7 @@ cplusplus {{
     typedef std::bitset<8> bits;
 }}
 
-class noncobject bits;
+class bits {@existingClass;};
 
 
 packet MyFrame {

@@ -1,0 +1,8 @@
+At [0], Node [0] , Introducing channel error with code=[0000]
+At time [0.5], Node[0] [sent] frame with seq_num=[0] and payload= [$aaaa$] and trailer= [00000000] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
+At [0.5], Node [0] , Introducing channel error with code=[0000]
+At time [1], Node[0] [sent] frame with seq_num=[1] and payload= [$b/$bbb$] and trailer= [00001011] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
+At [1], Node [0] , Introducing channel error with code=[0000]
+At time [1.5], Node[0] [sent] frame with seq_num=[2] and payload= [$ccc/$/$c$] and trailer= [00000000] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]
+At [1.5], Node [0] , Introducing channel error with code=[0000]
+At time [2], Node[0] [sent] frame with seq_num=[3] and payload= [$d///$ddd$] and trailer= [00001011] , Modified [-1] , Lost [No], Duplicate [0], Delay [0]

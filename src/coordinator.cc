@@ -57,6 +57,7 @@ void Coordinator::initialize()
 void Coordinator::handleMessage(cMessage *msg)
 {
     // TODO - Generated method body
+
     if(msg->isSelfMessage())
     {
         std::string message = node + " "+ startTime;

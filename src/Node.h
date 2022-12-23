@@ -19,6 +19,7 @@
 #include <omnetpp.h>
 #include <vector>
 #include <string>
+#include<fstream>
 #include "MyFrame_m.h"
 
 using namespace omnetpp;
@@ -41,6 +42,7 @@ private:
   std::string starternode;
   int starternodeid;
   int starttime;
+  std::ofstream MyFile;
 
 public:
   Node();
