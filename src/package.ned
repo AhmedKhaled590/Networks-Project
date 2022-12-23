@@ -6,7 +6,7 @@ package cnproject;
 //
 network Network
 {
-    @display("bgb=545,250");
+    @display("bgb=1237,383");
     submodules:
         node0: Node {
             @display("p=90,73");

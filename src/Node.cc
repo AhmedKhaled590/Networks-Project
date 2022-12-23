@@ -229,8 +229,8 @@ void Node::messageHandler(MyFrame_Base *message, const char *code, int modifyInd
         lostString = "yes";
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
-        double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
-        totalDelay += par("ED").doubleValue();
+        // double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
+        // totalDelay += par("ED").doubleValue();
     }
     else if (modify && duplicate && !delay && lost)
     {
@@ -238,9 +238,9 @@ void Node::messageHandler(MyFrame_Base *message, const char *code, int modifyInd
         lostString = "yes";
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
-        double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
+        // double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
         MyFrame_Base *dup_frame = message->dup();
-        totalDelay += par("DD").doubleValue();
+        // totalDelay += par("DD").doubleValue();
         cancelAndDelete(dup_frame);
     }
     else if (modify && duplicate && delay && lost)
@@ -249,10 +249,10 @@ void Node::messageHandler(MyFrame_Base *message, const char *code, int modifyInd
         lostString = "yes";
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
-        double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
-        totalDelay += par("ED").doubleValue();
+        // double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
+        // totalDelay += par("ED").doubleValue();
         MyFrame_Base *dup_frame = message->dup();
-        totalDelay += par("DD").doubleValue();
+        // totalDelay += par("DD").doubleValue();
         cancelAndDelete(dup_frame);
     }
 
@@ -397,12 +397,13 @@ void Node::handleMessage(cMessage *msg)
 
             messageHandler(frame, codes.at(i).c_str(), randBit, i, next);
         }
+        cancelAndDelete(msg);
     }
 
     // check if message type is cMessage not MyFrame_Base
     else if (typeid(*msg) != typeid(MyFrame_Base) && strcmp(msg->getName(), "timeoutEvent"))
     {
-//        EV << "received from coordinator" << endl;
+        //        EV << "received from coordinator" << endl;
         // MyFile << "received from coordinator" << endl;
         std::string tempMsg(msg->getName());
         starternode = tempMsg.substr(0, tempMsg.find(" "));
@@ -417,7 +418,7 @@ void Node::handleMessage(cMessage *msg)
             starternodeid = 1;
         }
         starttime = std::stoi(tempMsg.substr(tempMsg.find(" ") + 1, tempMsg.length()));
-//        EV << starternodeid << "   " << starttime << endl;
+        //        EV << starternodeid << "   " << starttime << endl;
         // MyFile << starternodeid << "   " << starttime << endl;
 
         if (!strcmp(starternode.c_str(), getName()))
@@ -425,6 +426,7 @@ void Node::handleMessage(cMessage *msg)
             cMessage *initMsg = new cMessage("start");
             scheduleAt(simTime() + starttime, initMsg);
         }
+        cancelAndDelete(msg);
     }
 
     else if (!strcmp(msg->getName(), "timeoutEvent"))
@@ -531,8 +533,8 @@ void Node::handleMessage(cMessage *msg)
 
             int LossProbability = int(uniform(0, 100));
             int LP = (int)par("LP").doubleValue();
-            std::cout<<"LossProbability: "<<LossProbability<<endl;
-            std::cout<<"LP: "<<LP<<endl;
+            // std::cout << "LossProbability: " << LossProbability << endl;
+            // std::cout << "LP: " << LP << endl;
             if (!(strcmp(ParityStr.c_str(), "00000000")) && LossProbability > LP)
             {
                 frameExpected = frameExpected + 1;
@@ -555,8 +557,8 @@ void Node::handleMessage(cMessage *msg)
                 int temp = frameExpected;
                 temp = temp + 1;
                 reply->setFrameType(1);
-                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << (temp%WS) << "] ,loss [yes]" << endl;
-                MyFile << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << (temp%WS) << "] ,loss [yes]" << endl;
+                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << (temp % WS) << "] ,loss [yes]" << endl;
+                MyFile << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << (temp % WS) << "] ,loss [yes]" << endl;
             }
             else if (strcmp(ParityStr.c_str(), "00000000") && LossProbability < LP)
             {
