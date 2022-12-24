@@ -12,7 +12,7 @@ Implementation and simulation of Go back N with slight modifications using OMNet
 ## 🏁 Get Started <a name = "install"></a>
 1. **Clone the repository**
 ```
-git clone https://github.com/gaserashraf/Eagle-Hunting-Game.git
+git clone https://github.com/AhmedKhaled590/Networks-Project.git
 ```
 2. **Install Any Version of OMNet++**
 
