@@ -158,23 +158,23 @@ void Node::messageHandler(MyFrame_Base *message, const char *code, int modifyInd
     }
     else if (lost && !duplicate && !delay && !modify)
     {
-        lostString = "yes";
+        lostString = "Yes";
     }
     else if (lost && delay && !duplicate && !modify)
     {
-        lostString = "yes";
+        lostString = "Yes";
         // double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
     }
     else if (lost && duplicate && !delay && !modify)
     {
-        lostString = "yes";
+        lostString = "Yes";
         duplicateInt = 1;
         MyFrame_Base *dup_frame = message->dup();
         cancelAndDelete(dup_frame);
     }
     else if (lost && duplicate && delay && !modify)
     {
-        lostString = "yes";
+        lostString = "Yes";
         duplicateInt = 1;
         MyFrame_Base *dup_frame = message->dup();
         cancelAndDelete(dup_frame);
@@ -219,14 +219,14 @@ void Node::messageHandler(MyFrame_Base *message, const char *code, int modifyInd
     }
     else if (modify && !duplicate && !delay && lost)
     {
-        lostString = "yes";
+        lostString = "Yes";
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
         // double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
     }
     else if (modify && !duplicate && delay && lost)
     {
-        lostString = "yes";
+        lostString = "Yes";
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
         // double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
@@ -235,7 +235,7 @@ void Node::messageHandler(MyFrame_Base *message, const char *code, int modifyInd
     else if (modify && duplicate && !delay && lost)
     {
         duplicateInt = 1;
-        lostString = "yes";
+        lostString = "Yes";
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
         // double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
@@ -246,7 +246,7 @@ void Node::messageHandler(MyFrame_Base *message, const char *code, int modifyInd
     else if (modify && duplicate && delay && lost)
     {
         duplicateInt = 1;
-        lostString = "yes";
+        lostString = "Yes";
         std::string payload = modifyBit(getBitsVector(message->getPayload()), modifyIndex);
         message->setPayload(payload.c_str());
         // double totalDelay = (par("PT").doubleValue() * (index + 1 - nextFrameToSendTemp) + par("TD").doubleValue());
@@ -372,8 +372,8 @@ void Node::handleMessage(cMessage *msg)
         // schedule first window of frames
         for (int i = 0; i < WS; i++)
         {
-            EV << "At [" << simTime() + par("PT").doubleValue() * (i) << "], Node [" << starternodeid << "] , Introducing channel error with code=[" << codes.at(i) << "]" << endl;
-            MyFile << "At [" << simTime() + par("PT").doubleValue() * (i) << "], Node [" << starternodeid << "] , Introducing channel error with code=[" << codes.at(i) << "]" << endl;
+            EV << "At time [" << simTime() + par("PT").doubleValue() * (i) << "], Node [" << starternodeid << "] , Introducing channel error with code=[" << codes.at(i) << "]" << endl;
+            MyFile << "At time [" << simTime() + par("PT").doubleValue() * (i) << "], Node [" << starternodeid << "] , Introducing channel error with code=[" << codes.at(i) << "]" << endl;
             MyFrame_Base *frame = new MyFrame_Base("");
 
             frame->setSeqNum(i);
@@ -547,6 +547,7 @@ void Node::handleMessage(cMessage *msg)
             }
             else if (strcmp(ParityStr.c_str(), "00000000") && LossProbability > LP)
             {
+                reply->setAckNackNumber(frameExpected % WS);
                 reply->setFrameType(2);
                 EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [NACK] with number [" << frameExpected % WS << "] ,loss [No]" << endl;
                 MyFile << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [NACK] with number [" << frameExpected % WS << "] ,loss [No]" << endl;
@@ -556,15 +557,17 @@ void Node::handleMessage(cMessage *msg)
             {
                 int temp = frameExpected;
                 temp = temp + 1;
+                reply->setAckNackNumber(temp % WS);
                 reply->setFrameType(1);
-                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << (temp % WS) << "] ,loss [yes]" << endl;
-                MyFile << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << (temp % WS) << "] ,loss [yes]" << endl;
+                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << (temp % WS) << "] ,loss [Yes]" << endl;
+                MyFile << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [ACK] with number [" << (temp % WS) << "] ,loss [Yes]" << endl;
             }
             else if (strcmp(ParityStr.c_str(), "00000000") && LossProbability < LP)
             {
+                reply->setAckNackNumber(frameExpected % WS);
                 reply->setFrameType(2);
-                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [NACK] with number [" << frameExpected % WS << "] ,loss [yes]" << endl;
-                MyFile << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [NACK] with number [" << frameExpected % WS << "] ,loss [yes]" << endl;
+                EV << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [NACK] with number [" << frameExpected % WS << "] ,loss [Yes]" << endl;
+                MyFile << "At time [" << simTime() + par("PT").doubleValue() << "], Node[" << 1 - starternodeid << "] Sending [NACK] with number [" << frameExpected % WS << "] ,loss [Yes]" << endl;
             }
         }
 

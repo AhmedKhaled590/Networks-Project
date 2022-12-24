@@ -33,6 +33,12 @@ git clone https://github.com/gaserashraf/Eagle-Hunting-Game.git
 </div>
 
 ## 📷 Demo
+<div align="center">
+    <h4>Network Design</h4>
+   <img width=100% src="Screenshots\Demo1.gif" alt="demo-simulation"></a>
+   <hr>
+</div>
+
 ### ✨ Contributors
 <table>
   <tr>
